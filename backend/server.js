@@ -18,6 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static files from the uploads folder
+// NOTE: On Vercel, files dynamically uploaded here during runtime will not be saved.
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API Routes
@@ -28,8 +29,11 @@ app.get('/', (req, res) => {
     res.send('API is running successfully...');
 });
 
-const PORT = process.env.PORT || 5000;
+// REMOVED app.listen() FOR VERCEL
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+// });
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// ADDED THIS FOR VERCEL
+module.exports = app;
