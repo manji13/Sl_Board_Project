@@ -10,6 +10,9 @@ export default function CoachList() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // FIXED: Strictly using Vite's environment variable format to prevent the 'process is not defined' crash.
+  const API_URL = import.meta.env?.VITE_API_URL || 'https://sl-board-project.vercel.app';
+
   useEffect(() => { 
     fetchCoaches(); 
   }, []);
@@ -17,7 +20,7 @@ export default function CoachList() {
   const fetchCoaches = () => {
     setLoading(true);
     setError(null);
-    axios.get('http://localhost:5000/api/coaches')
+    axios.get(`${API_URL}/api/coaches`)
       .then(res => {
         setCoaches(res.data);
         setLoading(false);
@@ -31,7 +34,7 @@ export default function CoachList() {
 
   const handleDelete = (id) => {
     if (window.confirm('Delete this coach profile permanently?')) {
-      axios.delete(`http://localhost:5000/api/coaches/${id}`)
+      axios.delete(`${API_URL}/api/coaches/${id}`)
         .then(() => fetchCoaches())
         .catch(err => {
           console.error('Error deleting coach:', err);
@@ -116,7 +119,7 @@ export default function CoachList() {
               {coach.image ? (
                 <img 
                   className="w-[48px] h-[48px] lg:w-[52px] lg:h-[52px] rounded-full object-cover border-[3px] border-[#E8E0D0]" 
-                  src={`http://localhost:5000/uploads/${coach.image}`} 
+                  src={`${API_URL}/uploads/${coach.image}`} 
                   alt={coach.name}
                   onError={(e) => {
                     e.target.onerror = null;
@@ -257,7 +260,7 @@ export default function CoachList() {
                 {viewCoach.image ? (
                   <img 
                     className="w-[80px] h-[80px] rounded-[16px] object-cover border-4 border-[#C9A84C]" 
-                    src={`http://localhost:5000/uploads/${viewCoach.image}`} 
+                    src={`${API_URL}/uploads/${viewCoach.image}`} 
                     alt={viewCoach.name}
                     onError={(e) => {
                       e.target.onerror = null;
