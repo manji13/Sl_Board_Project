@@ -251,7 +251,7 @@ export default function CoachList() {
             <span className="font-serif-custom text-white text-[20px] tracking-[0.5px] font-semibold">
               Super Province Galle{" "}
               <span className="text-[#C9A84C] font-bold">
-                Cricket Coach Management
+                - Cricket Coach Management
               </span>
             </span>
           </div>
