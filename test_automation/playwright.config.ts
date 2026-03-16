@@ -6,7 +6,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [['list'], ['html']], // 'list' shows console output, 'html' generates HTML report
+  reporter: [['list'], ['html', { outputFolder: 'test-results' }]],  // HTML report folder
   outputDir: 'test-results',
   use: {
     trace: 'on-first-retry',
