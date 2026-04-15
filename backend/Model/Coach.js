@@ -3,13 +3,14 @@ const mongoose = require('mongoose');
 const coachSchema = new mongoose.Schema({
   name: String,
   phone: String,
+  nic: String,  // ✅ VITAL: Tells MongoDB to save the NIC
   age: String,
   gender: String,
   employment: String,
-  designation: [String], // Changed to Array
+  designation: [String], 
   district: String,
   zone: String,
-  qualifications: [String], // Changed to Array
+  qualifications: [String], 
   playingExperience: String,
   coachingExperience: String,
   licenseNumber: String,

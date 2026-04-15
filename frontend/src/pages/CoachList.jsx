@@ -10,7 +10,7 @@ export default function CoachList() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // FIXED: Strictly using Vite's environment variable format to prevent the 'process is not defined' crash.
+  // ✅ Points to your Vercel hosting
   const API_URL = import.meta.env?.VITE_API_URL || 'https://sl-board-project.vercel.app';
 
   useEffect(() => { 
@@ -20,7 +20,7 @@ export default function CoachList() {
   const fetchCoaches = () => {
     setLoading(true);
     setError(null);
-    axios.get(`${API_URL}/api/coaches`)
+    axios.get(`${API_URL}/api/coaches?t=${new Date().getTime()}`)
       .then(res => {
         setCoaches(res.data);
         setLoading(false);
@@ -60,7 +60,12 @@ export default function CoachList() {
   const filteredCoaches = coaches.filter(coach => {
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase().trim();
-    return coach.licenseNumber && coach.licenseNumber.toLowerCase().includes(term);
+    
+    // ✅ Searches by Name OR NIC
+    const matchName = coach.name && coach.name.toLowerCase().includes(term);
+    const matchNic = coach.nic && coach.nic.toLowerCase().includes(term);
+    
+    return matchName || matchNic;
   });
 
   const renderContent = () => {
@@ -94,8 +99,8 @@ export default function CoachList() {
           <div className="text-[80px] mb-6 opacity-50">🏏</div>
           {searchTerm ? (
             <>
-              <div className="text-[20px] font-semibold text-[#4A5568] mb-2">No coaches found with license "{searchTerm}"</div>
-              <div className="text-[15px] text-[#94A3B8]">Check the license number and try again</div>
+              <div className="text-[20px] font-semibold text-[#4A5568] mb-2">No coaches found matching "{searchTerm}"</div>
+              <div className="text-[15px] text-[#94A3B8]">Check the NIC or Name and try again</div>
             </>
           ) : (
             <>
@@ -146,7 +151,6 @@ export default function CoachList() {
               {getDesig(coach).length === 0 && <span className="px-3 py-1 rounded-full text-[12px] font-semibold tracking-[0.3px] bg-gray-100 text-gray-500">—</span>}
             </div>
             
-            {/* Hidden on small screens */}
             <div className="hidden md:block text-[15px] text-[#4A5568] font-medium">{coach.district || '—'}</div>
             <div className="hidden md:block text-[14px] text-[#4A5568]">
               {coach.coachingExperience ? <><strong className="text-[#1A1A2E] font-bold text-[16px]">{coach.coachingExperience}</strong> yrs</> : '—'}
@@ -165,7 +169,6 @@ export default function CoachList() {
 
   return (
     <>
-      {/* Tiny CSS snippet for custom animations and fonts that don't exist in default Tailwind */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
         @keyframes rowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -180,7 +183,6 @@ export default function CoachList() {
 
       <div className="min-h-screen bg-[#FAF7F2] font-sans-custom flex flex-col" style={{ backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(201,168,76,0.06) 0%, transparent 50%), radial-gradient(circle at 90% 80%, rgba(45,106,79,0.06) 0%, transparent 50%)' }}>
         
-        {/* Topbar */}
         <div className="bg-[#1A1A2E] px-6 lg:px-10 flex items-center justify-between h-[70px] border-b-[3px] border-[#C9A84C] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-[42px] h-[42px] bg-[#C9A84C] rounded-[10px] flex items-center justify-center text-[22px]">🏏</div>
@@ -192,10 +194,8 @@ export default function CoachList() {
           </div>
         </div>
 
-        {/* Main Container */}
         <div className="max-w-[1400px] w-full mx-auto px-4 lg:px-6 py-[30px] flex-1">
           
-          {/* Header Area */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-[30px] flex-wrap gap-5">
             <div className="flex flex-col">
               <div className="text-[12px] font-bold tracking-[3px] uppercase text-[#C9A84C] mb-2">COACH REGISTRY</div>
@@ -213,7 +213,7 @@ export default function CoachList() {
                 <input
                   className="w-full py-[14px] pr-5 pl-12 border-2 border-[#E8E0D0] rounded-xl bg-white font-sans-custom text-[15px] text-[#1A1A2E] outline-none transition focus:border-[#C9A84C] focus:ring-4 focus:ring-[#C9A84C]/15 placeholder:text-[#94A3B8] placeholder:text-[14px]"
                   type="text"
-                  placeholder="Search by License Number..."
+                  placeholder="Search by NIC and Name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   spellCheck="false"
@@ -232,10 +232,7 @@ export default function CoachList() {
             </div>
           </div>
 
-          {/* Table Card */}
           <div className="bg-white border-2 border-[#E8E0D0] rounded-[20px] overflow-hidden shadow-[0_4px_24px_rgba(26,26,46,0.08)] flex flex-col min-h-[500px] w-full">
-            
-            {/* Table Header */}
             <div className="grid grid-cols-[50px_1fr_1fr_100px] md:grid-cols-[60px_1.2fr_1.5fr_1fr_0.8fr_140px] lg:grid-cols-[70px_1.2fr_1.8fr_1fr_0.8fr_160px] px-4 md:px-5 lg:px-6 py-4 lg:py-[18px] bg-[#1A1A2E] gap-3 lg:gap-[15px] items-center shrink-0">
               <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-white/60"></div>
               <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-white/60">Coach</div>
@@ -244,18 +241,14 @@ export default function CoachList() {
               <div className="hidden md:block text-[12px] font-bold tracking-[1.5px] uppercase text-white/60">Exp.</div>
               <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-white/60 text-center">Actions</div>
             </div>
-            
-            {/* Table Body */}
             {renderContent()}
           </div>
         </div>
 
-        {/* Modal Overlay */}
         {viewCoach && (
           <div className="fixed inset-0 bg-[#1A1A2E]/80 backdrop-blur-sm flex items-center justify-center z-[1000] p-5 animate-fadeIn" onClick={(e) => e.target === e.currentTarget && setViewCoach(null)}>
             <div className="bg-white rounded-[24px] w-[700px] max-w-full max-h-[90vh] overflow-y-auto shadow-[0_30px_70px_rgba(0,0,0,0.3)] animate-slideUp">
               
-              {/* Modal Header */}
               <div className="bg-[#1A1A2E] p-[30px] rounded-t-[24px] flex items-center gap-5 relative">
                 {viewCoach.image ? (
                   <img 
@@ -284,7 +277,6 @@ export default function CoachList() {
                 <button className="absolute top-5 right-5 w-9 h-9 bg-white/10 rounded-[10px] text-white/70 flex items-center justify-center transition hover:bg-white/20 hover:text-white hover:scale-105" onClick={() => setViewCoach(null)}>✕</button>
               </div>
 
-              {/* Modal Body */}
               <div className="p-[30px]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="bg-[#FAF7F2] border-2 border-[#E8E0D0] rounded-xl p-4">
@@ -294,6 +286,10 @@ export default function CoachList() {
                   <div className="bg-[#FAF7F2] border-2 border-[#E8E0D0] rounded-xl p-4">
                     <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#C9A84C] mb-1.5">👤 Age & Gender</div>
                     <div className="text-[16px] text-[#1A1A2E] font-medium">{viewCoach.age || '—'} yrs · {viewCoach.gender || '—'}</div>
+                  </div>
+                  <div className="bg-[#FAF7F2] border-2 border-[#E8E0D0] rounded-xl p-4">
+                    <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#C9A84C] mb-1.5">🪪 NIC Number</div>
+                    <div className="text-[16px] text-[#1A1A2E] font-medium">{viewCoach.nic || '—'}</div>
                   </div>
                   <div className="bg-[#FAF7F2] border-2 border-[#E8E0D0] rounded-xl p-4">
                     <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#C9A84C] mb-1.5">🏫 Employment</div>
@@ -312,7 +308,7 @@ export default function CoachList() {
                     <div className="text-[16px] text-[#1A1A2E] font-medium">{viewCoach.coachingExperience ? `${viewCoach.coachingExperience} Years` : '—'}</div>
                   </div>
                   <div className="bg-[#FAF7F2] border-2 border-[#E8E0D0] rounded-xl p-4">
-                    <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#C9A84C] mb-1.5">🪪 License Number</div>
+                    <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#C9A84C] mb-1.5">🔖 License Number</div>
                     <div className="text-[16px] text-[#1A1A2E] font-medium">{viewCoach.licenseNumber || '—'}</div>
                   </div>
                   
@@ -328,7 +324,6 @@ export default function CoachList() {
                 </div>
               </div>
 
-              {/* Modal Footer */}
               <div className="px-[30px] py-5 border-t-2 border-[#E8E0D0] flex gap-[15px]">
                 <button 
                   className="flex-1 py-[14px] rounded-xl font-sans-custom text-[15px] font-semibold transition bg-[#FAF7F2] text-[#4A5568] border-2 border-[#E8E0D0] hover:bg-[#E8E0D0] hover:-translate-y-0.5" 

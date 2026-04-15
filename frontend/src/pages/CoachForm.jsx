@@ -12,38 +12,65 @@ const qualificationOptions = [
   "Level 0", "Level 1", "Level 2", "Level 3", "No Qualifications"
 ];
 
-const districtOptions = ["Galle", "Matara", "Hambanthota"];
+const districtOptions = ["Galle", "Matara", "Hambanthota", "Monaragala", "Rathnapura", "Badulla"];
 const zoneOptions = ["Galle Zone 1", "Galle Zone 2", "Galle Zone 3"];
 
 export default function CoachForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  
   const [formData, setFormData] = useState({
-    name: '', phone: '', age: '', gender: '', employment: '',
+    name: '', phone: '', nic: '', age: '', gender: '', employment: '',
     designation: [], district: '', zone: '', qualifications: [],
     playingExperience: '', coachingExperience: '', licenseNumber: ''
   });
+  
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // FIXED: Strictly using Vite's environment variable format
-  const API_URL = import.meta.env?.VITE_API_URL || 'https://sl-board-project.vercel.app';
+  // API URL - Vercel in production, localhost in development
+  const API_URL = import.meta.env?.VITE_API_URL || (process.env.NODE_ENV === 'production' ? 'https://sl-board-project.vercel.app' : 'http://localhost:5000');
 
   useEffect(() => {
     if (id) {
-      axios.get(`${API_URL}/api/coaches/${id}`)
-        .then(res => {
-          setFormData({
-            ...res.data,
-            designation: Array.isArray(res.data.designation) ? res.data.designation : [res.data.designation].filter(Boolean),
-            qualifications: Array.isArray(res.data.qualifications) ? res.data.qualifications : [res.data.qualifications].filter(Boolean),
-          });
-          if (res.data.image) setImagePreview(`${API_URL}/uploads/${res.data.image}`);
-        })
-        .catch(err => console.error(err));
+      fetchCoachData();
     }
-  }, [id, API_URL]);
+  }, [id]);
+
+  const fetchCoachData = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/coaches/${id}?t=${new Date().getTime()}`);
+      const coachData = res.data;
+      
+      setFormData({
+        name: coachData.name || '',
+        phone: coachData.phone || '',
+        nic: coachData.nic || '',
+        age: coachData.age || '',
+        gender: coachData.gender || '',
+        employment: coachData.employment || '',
+        designation: Array.isArray(coachData.designation) ? coachData.designation : (coachData.designation ? [coachData.designation] : []),
+        district: coachData.district || '',
+        zone: coachData.zone || '',
+        qualifications: Array.isArray(coachData.qualifications) ? coachData.qualifications : (coachData.qualifications ? [coachData.qualifications] : []),
+        playingExperience: coachData.playingExperience || '',
+        coachingExperience: coachData.coachingExperience || '',
+        licenseNumber: coachData.licenseNumber || ''
+      });
+      
+      // ✅ Handle base64 image for preview
+      if (coachData.image && coachData.image.startsWith('data:image')) {
+        setImagePreview(coachData.image);
+      } else if (coachData.image) {
+        setImagePreview(`${API_URL}/uploads/${coachData.image}`);
+      }
+    } catch (err) {
+      console.error('Error fetching coach:', err);
+      setError('Failed to load coach data');
+    }
+  };
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -55,40 +82,98 @@ export default function CoachForm() {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setImageFile(file);
-    if (file) setImagePreview(URL.createObjectURL(file));
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    if (formData.designation.length === 0 || formData.qualifications.length === 0) {
-      setError('Please select at least one Designation and one Qualification.');
+    // Validation
+    if (!formData.name || formData.name.trim() === '') {
+      setError('Please enter Coach Name');
+      setLoading(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
+    if (!formData.nic || formData.nic.trim() === '') {
+      setError('Please enter NIC Number (Required)');
+      setLoading(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
+    if (formData.designation.length === 0) {
+      setError('Please select at least one Designation');
+      setLoading(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
+    if (formData.qualifications.length === 0) {
+      setError('Please select at least one Qualification');
+      setLoading(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     const data = new FormData();
-    Object.keys(formData).forEach(key => {
-      if (key === 'designation' || key === 'qualifications') {
-        data.append(key, JSON.stringify(formData[key]));
-      } else {
-        data.append(key, formData[key]);
-      }
-    });
-    if (imageFile) data.append('image', imageFile);
+    
+    // ✅ Explicitly append ALL fields including NIC
+    data.append('name', formData.name || '');
+    data.append('phone', formData.phone || '');
+    data.append('nic', formData.nic || '');  // CRITICAL: NIC is explicitly appended
+    data.append('age', formData.age || '');
+    data.append('gender', formData.gender || '');
+    data.append('employment', formData.employment || '');
+    data.append('district', formData.district || '');
+    data.append('zone', formData.zone || '');
+    data.append('playingExperience', formData.playingExperience || '');
+    data.append('coachingExperience', formData.coachingExperience || '');
+    data.append('licenseNumber', formData.licenseNumber || '');
+    
+    // Handle arrays as JSON strings
+    data.append('designation', JSON.stringify(formData.designation));
+    data.append('qualifications', JSON.stringify(formData.qualifications));
+    
+    // Add image if selected
+    if (imageFile) {
+      data.append('image', imageFile);
+    }
 
     try {
+      let response;
       if (id) {
-        await axios.put(`${API_URL}/api/coaches/${id}`, data);
+        response = await axios.put(`${API_URL}/api/coaches/${id}`, data, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        console.log('Update response:', response.data);
       } else {
-        await axios.post(`${API_URL}/api/coaches`, data);
+        response = await axios.post(`${API_URL}/api/coaches`, data, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        console.log('Create response:', response.data);
       }
+      
+      // ✅ Verify NIC was saved
+      if (response.data && response.data.nic) {
+        console.log('NIC saved successfully:', response.data.nic);
+      } else {
+        console.warn('NIC might not have been saved');
+      }
+      
       navigate('/');
     } catch (err) {
-      console.error(err);
-      setError('Failed to save coach data. Please try again.');
+      console.error('Error saving coach:', err);
+      console.error('Error details:', err.response?.data);
+      setError(err.response?.data?.error || 'Failed to save coach data. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,7 +193,6 @@ export default function CoachForm() {
         className="w-full min-h-screen bg-[#FAF7F2] font-sans-custom pb-20"
         style={{ backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(201,168,76,0.06) 0%, transparent 50%), radial-gradient(circle at 90% 80%, rgba(45,106,79,0.06) 0%, transparent 50%)' }}
       >
-        {/* Top Bar */}
         <div className="bg-[#1A1A2E] px-5 sm:px-10 flex items-center justify-between h-16 w-full border-b-[2px] border-[#C9A84C] sticky top-0 z-50">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-[#C9A84C] rounded-lg flex items-center justify-center text-[18px]">🏏</div>
@@ -123,7 +207,6 @@ export default function CoachForm() {
 
         <div className="max-w-[960px] w-full mx-auto px-4 sm:px-8 pt-10 pb-20">
 
-          {/* Page Header */}
           <div className="mb-9">
             <div className="text-[11px] font-semibold tracking-[2.5px] uppercase text-[#C9A84C] mb-2">{isEdit ? 'Update Record' : 'New Registration'}</div>
             <div className="font-serif-custom text-[34px] text-[#1A1A2E] leading-[1.15]">{isEdit ? 'Edit Coach Profile' : 'Register New Coach'}</div>
@@ -139,8 +222,7 @@ export default function CoachForm() {
           )}
 
           <form onSubmit={handleSubmit}>
-
-            {/* Section 1: Personal Info */}
+            {/* Personal Information Section */}
             <div className="bg-white border border-[#E8E0D0] rounded-2xl mb-6 overflow-hidden shadow-[0_4px_24px_rgba(26,26,46,0.08)] animate-sectionIn" style={{ animationDelay: '0.05s' }}>
               <div className="flex items-center gap-3 px-6 py-[18px] bg-[#1A1A2E] border-b border-white/10">
                 <div className="w-[34px] h-[34px] bg-[#C9A84C]/15 rounded-lg flex items-center justify-center text-[16px] shrink-0">👤</div>
@@ -151,19 +233,23 @@ export default function CoachForm() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="flex flex-col gap-[7px]">
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">Full Name <span className="text-[#C1121F] text-[14px] leading-none">*</span></label>
-                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full placeholder:text-[#B0A898]" type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="E.g. Mahela Jayawardene" />
+                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" type="text" name="name" value={formData.name} onChange={handleChange} required />
                   </div>
                   <div className="flex flex-col gap-[7px]">
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">Phone Number <span className="text-[#C1121F] text-[14px] leading-none">*</span></label>
-                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full placeholder:text-[#B0A898]" type="tel" name="phone" value={formData.phone} onChange={handleChange} required placeholder="07X XXX XXXX" />
+                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" type="tel" name="phone" value={formData.phone} onChange={handleChange} required />
+                  </div>
+                  <div className="flex flex-col gap-[7px]">
+                    <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">NIC Number</label>
+                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" type="text" name="nic" value={formData.nic} onChange={handleChange} placeholder="Enter NIC number" />
                   </div>
                   <div className="flex flex-col gap-[7px]">
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">Age</label>
-                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full placeholder:text-[#B0A898]" type="number" name="age" value={formData.age} onChange={handleChange} placeholder="Years" min="16" max="90" />
+                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" type="number" name="age" value={formData.age} onChange={handleChange} placeholder="Years" min="16" max="90" />
                   </div>
                   <div className="flex flex-col gap-[7px]">
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">Gender</label>
-                    <select className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full appearance-none pr-9 bg-[url('data:image/svg+xml,%3Csvg_xmlns=\'http://www.w3.org/2000/svg\'_width=\'12\'_height=\'8\'_viewBox=\'0_0_12_8\'%3E%3Cpath_d=\'M1_1l5_5_5-5\'_stroke=\'%234A5568\'_stroke-width=\'1.5\'_fill=\'none\'_stroke-linecap=\'round\'/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_14px_center]" name="gender" value={formData.gender} onChange={handleChange}>
+                    <select className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" name="gender" value={formData.gender} onChange={handleChange}>
                       <option value="">Select Gender</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -173,7 +259,7 @@ export default function CoachForm() {
               </div>
             </div>
 
-            {/* Section 2: Role & Qualifications */}
+            {/* Role & Qualifications Section */}
             <div className="bg-white border border-[#E8E0D0] rounded-2xl mb-6 overflow-hidden shadow-[0_4px_24px_rgba(26,26,46,0.08)] animate-sectionIn" style={{ animationDelay: '0.1s' }}>
               <div className="flex items-center gap-3 px-6 py-[18px] bg-[#1A1A2E] border-b border-white/10">
                 <div className="w-[34px] h-[34px] bg-[#C9A84C]/15 rounded-lg flex items-center justify-center text-[16px] shrink-0">🎓</div>
@@ -181,7 +267,6 @@ export default function CoachForm() {
                 <div className="text-[11px] font-semibold tracking-[1px] text-white/30 uppercase">02</div>
               </div>
               <div className="p-6 flex flex-col gap-6">
-
                 <div className="flex flex-col gap-[7px]">
                   <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">Designation (Position) <span className="text-[#C1121F] text-[14px] leading-none">*</span></label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-1">
@@ -221,26 +306,25 @@ export default function CoachForm() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="flex flex-col gap-[7px]">
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">Playing Exp. & Level</label>
-                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full placeholder:text-[#B0A898]" type="text" name="playingExperience" value={formData.playingExperience} onChange={handleChange} placeholder="E.g. First Class, Club" />
+                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" type="text" name="playingExperience" value={formData.playingExperience} onChange={handleChange} />
                   </div>
                   <div className="flex flex-col gap-[7px]">
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">Coaching Experience (Years)</label>
-                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full placeholder:text-[#B0A898]" type="number" name="coachingExperience" value={formData.coachingExperience} onChange={handleChange} placeholder="0" min="0" />
+                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" type="number" name="coachingExperience" value={formData.coachingExperience} onChange={handleChange} min="0" />
                   </div>
                   <div className="flex flex-col gap-[7px]">
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">Coaching License Number</label>
-                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full placeholder:text-[#B0A898]" type="text" name="licenseNumber" value={formData.licenseNumber} onChange={handleChange} placeholder="License ID" />
+                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" type="text" name="licenseNumber" value={formData.licenseNumber} onChange={handleChange} />
                   </div>
                   <div className="flex flex-col gap-[7px]">
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">Present Employment</label>
-                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full placeholder:text-[#B0A898]" type="text" name="employment" value={formData.employment} onChange={handleChange} placeholder="School or Academy Name" />
+                    <input className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" type="text" name="employment" value={formData.employment} onChange={handleChange} />
                   </div>
                 </div>
-
               </div>
             </div>
 
-            {/* Section 3: Location */}
+            {/* Location Details Section */}
             <div className="bg-white border border-[#E8E0D0] rounded-2xl mb-6 overflow-hidden shadow-[0_4px_24px_rgba(26,26,46,0.08)] animate-sectionIn" style={{ animationDelay: '0.15s' }}>
               <div className="flex items-center gap-3 px-6 py-[18px] bg-[#1A1A2E] border-b border-white/10">
                 <div className="w-[34px] h-[34px] bg-[#C9A84C]/15 rounded-lg flex items-center justify-center text-[16px] shrink-0">📍</div>
@@ -251,14 +335,14 @@ export default function CoachForm() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="flex flex-col gap-[7px]">
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">District</label>
-                    <select className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full appearance-none pr-9 bg-[url('data:image/svg+xml,%3Csvg_xmlns=\'http://www.w3.org/2000/svg\'_width=\'12\'_height=\'8\'_viewBox=\'0_0_12_8\'%3E%3Cpath_d=\'M1_1l5_5_5-5\'_stroke=\'%234A5568\'_stroke-width=\'1.5\'_fill=\'none\'_stroke-linecap=\'round\'/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_14px_center]" name="district" value={formData.district} onChange={handleChange}>
+                    <select className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" name="district" value={formData.district} onChange={handleChange}>
                       <option value="">Select District</option>
                       {districtOptions.map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
                   <div className="flex flex-col gap-[7px]">
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">Zone</label>
-                    <select className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full appearance-none pr-9 bg-[url('data:image/svg+xml,%3Csvg_xmlns=\'http://www.w3.org/2000/svg\'_width=\'12\'_height=\'8\'_viewBox=\'0_0_12_8\'%3E%3Cpath_d=\'M1_1l5_5_5-5\'_stroke=\'%234A5568\'_stroke-width=\'1.5\'_fill=\'none\'_stroke-linecap=\'round\'/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_14px_center]" name="zone" value={formData.zone} onChange={handleChange}>
+                    <select className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" name="zone" value={formData.zone} onChange={handleChange}>
                       <option value="">Select Zone</option>
                       {zoneOptions.map(z => <option key={z} value={z}>{z}</option>)}
                     </select>
@@ -267,7 +351,7 @@ export default function CoachForm() {
               </div>
             </div>
 
-            {/* Section 4: Profile Image */}
+            {/* Profile Image Section */}
             <div className="bg-white border border-[#E8E0D0] rounded-2xl mb-6 overflow-hidden shadow-[0_4px_24px_rgba(26,26,46,0.08)] animate-sectionIn" style={{ animationDelay: '0.2s' }}>
               <div className="flex items-center gap-3 px-6 py-[18px] bg-[#1A1A2E] border-b border-white/10">
                 <div className="w-[34px] h-[34px] bg-[#C9A84C]/15 rounded-lg flex items-center justify-center text-[16px] shrink-0">📷</div>
@@ -293,16 +377,15 @@ export default function CoachForm() {
               </div>
             </div>
 
-            {/* Footer */}
+            {/* Form Buttons */}
             <div className="bg-white border border-[#E8E0D0] rounded-2xl p-6 flex gap-3.5 items-center shadow-[0_4px_24px_rgba(26,26,46,0.08)] animate-sectionIn" style={{ animationDelay: '0.25s' }}>
-              <button type="button" className="flex items-center justify-center gap-2 px-6 py-[13px] rounded-[10px] font-sans-custom text-[14px] font-semibold transition-all bg-[#FAF7F2] text-[#4A5568] border-[1.5px] border-[#E8E0D0] min-w-[120px] hover:bg-[#E8E0D0] hover:text-[#1A1A2E]" onClick={() => navigate('/')}>
+              <button type="button" className="flex items-center justify-center gap-2 px-6 py-[13px] rounded-[10px] font-sans-custom text-[14px] font-semibold transition-all bg-[#FAF7F2] text-[#4A5568] border-[1.5px] border-[#E8E0D0] min-w-[120px] hover:bg-[#E8E0D0] hover:text-[#1A1A2E]" onClick={() => navigate('/')} disabled={loading}>
                 ← Cancel
               </button>
-              <button type="submit" className="flex-1 flex items-center justify-center gap-2 px-6 py-[13px] rounded-[10px] border-none cursor-pointer font-sans-custom text-[14px] font-semibold transition-all bg-[#1A1A2E] text-white hover:bg-[#C9A84C] hover:text-[#1A1A2E] hover:-translate-y-[1px] hover:shadow-[0_4px_16px_rgba(201,168,76,0.3)]">
-                {isEdit ? '💾 Save Changes' : '✅ Register Coach'}
+              <button type="submit" className="flex-1 flex items-center justify-center gap-2 px-6 py-[13px] rounded-[10px] border-none cursor-pointer font-sans-custom text-[14px] font-semibold transition-all bg-[#1A1A2E] text-white hover:bg-[#C9A84C] hover:text-[#1A1A2E] hover:-translate-y-[1px] hover:shadow-[0_4px_16px_rgba(201,168,76,0.3)] disabled:opacity-50 disabled:cursor-not-allowed" disabled={loading}>
+                {loading ? 'Saving...' : (isEdit ? '💾 Save Changes' : '✅ Register Coach')}
               </button>
             </div>
-
           </form>
         </div>
       </div>
