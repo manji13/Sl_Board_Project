@@ -10,14 +10,9 @@ export default function CoachList() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-<<<<<<< HEAD
   // ✅ Points to your Vercel hosting
   const API_URL = import.meta.env?.VITE_API_URL || 'https://sl-board-project.vercel.app';
-=======
   // FIXED: Strictly using Vite's environment variable format to prevent the 'process is not defined' crash.
-  const API_URL =
-    import.meta.env?.VITE_API_URL || "https://sl-board-project.vercel.app";
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
 
   useEffect(() => {
     fetchCoaches();
@@ -26,14 +21,9 @@ export default function CoachList() {
   const fetchCoaches = () => {
     setLoading(true);
     setError(null);
-<<<<<<< HEAD
-    axios.get(`${API_URL}/api/coaches?t=${new Date().getTime()}`)
-      .then(res => {
-=======
     axios
-      .get(`${API_URL}/api/coaches`)
+      .get(`${API_URL}/api/coaches?t=${new Date().getTime()}`)
       .then((res) => {
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
         setCoaches(res.data);
         setLoading(false);
       })
@@ -73,18 +63,13 @@ export default function CoachList() {
   const filteredCoaches = coaches.filter((coach) => {
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase().trim();
-<<<<<<< HEAD
     
-    // ✅ Searches by Name OR NIC
+    // ✅ Searches by Name, NIC, or License Number
     const matchName = coach.name && coach.name.toLowerCase().includes(term);
     const matchNic = coach.nic && coach.nic.toLowerCase().includes(term);
+    const matchLicense = coach.licenseNumber && coach.licenseNumber.toLowerCase().includes(term);
     
-    return matchName || matchNic;
-=======
-    return (
-      coach.licenseNumber && coach.licenseNumber.toLowerCase().includes(term)
-    );
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
+    return matchName || matchNic || matchLicense;
   });
 
   const renderContent = () => {
@@ -120,17 +105,14 @@ export default function CoachList() {
           <div className="text-[80px] mb-6 opacity-50">🏏</div>
           {searchTerm ? (
             <>
-<<<<<<< HEAD
               <div className="text-[20px] font-semibold text-[#4A5568] mb-2">No coaches found matching "{searchTerm}"</div>
               <div className="text-[15px] text-[#94A3B8]">Check the NIC or Name and try again</div>
-=======
               <div className="text-[20px] font-semibold text-[#4A5568] mb-2">
                 No coaches found with license "{searchTerm}"
               </div>
               <div className="text-[15px] text-[#94A3B8]">
                 Check the license number and try again
               </div>
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
             </>
           ) : (
             <>
@@ -197,29 +179,10 @@ export default function CoachList() {
                 </span>
               )}
             </div>
-<<<<<<< HEAD
             
             <div className="hidden md:block text-[15px] text-[#4A5568] font-medium">{coach.district || '—'}</div>
             <div className="hidden md:block text-[14px] text-[#4A5568]">
               {coach.coachingExperience ? <><strong className="text-[#1A1A2E] font-bold text-[16px]">{coach.coachingExperience}</strong> yrs</> : '—'}
-=======
-
-            {/* Hidden on small screens */}
-            <div className="hidden md:block text-[15px] text-[#4A5568] font-medium">
-              {coach.district || "—"}
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
-            </div>
-            <div className="hidden md:block text-[14px] text-[#4A5568]">
-              {coach.coachingExperience ? (
-                <>
-                  <strong className="text-[#1A1A2E] font-bold text-[16px]">
-                    {coach.coachingExperience}
-                  </strong>{" "}
-                  yrs
-                </>
-              ) : (
-                "—"
-              )}
             </div>
 
             <div className="flex gap-2 justify-center">
@@ -265,10 +228,6 @@ export default function CoachList() {
         .font-serif-custom { font-family: 'Playfair Display', serif; }
       `}</style>
 
-<<<<<<< HEAD
-      <div className="min-h-screen bg-[#FAF7F2] font-sans-custom flex flex-col" style={{ backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(201,168,76,0.06) 0%, transparent 50%), radial-gradient(circle at 90% 80%, rgba(45,106,79,0.06) 0%, transparent 50%)' }}>
-        
-=======
       <div
         className="min-h-screen bg-[#FAF7F2] font-sans-custom flex flex-col"
         style={{
@@ -277,7 +236,6 @@ export default function CoachList() {
         }}
       >
         {/* Topbar */}
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
         <div className="bg-[#1A1A2E] px-6 lg:px-10 flex items-center justify-between h-[70px] border-b-[3px] border-[#C9A84C] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-[42px] h-[42px] bg-[#C9A84C] rounded-[10px] flex items-center justify-center text-[22px]">
@@ -297,11 +255,8 @@ export default function CoachList() {
         </div>
 
         <div className="max-w-[1400px] w-full mx-auto px-4 lg:px-6 py-[30px] flex-1">
-<<<<<<< HEAD
           
-=======
           {/* Header Area */}
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-[30px] flex-wrap gap-5">
             <div className="flex flex-col">
               <div className="text-[12px] font-bold tracking-[3px] uppercase text-[#C9A84C] mb-2">
@@ -351,10 +306,7 @@ export default function CoachList() {
           </div>
 
           <div className="bg-white border-2 border-[#E8E0D0] rounded-[20px] overflow-hidden shadow-[0_4px_24px_rgba(26,26,46,0.08)] flex flex-col min-h-[500px] w-full">
-<<<<<<< HEAD
-=======
             {/* Table Header */}
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
             <div className="grid grid-cols-[50px_1fr_1fr_100px] md:grid-cols-[60px_1.2fr_1.5fr_1fr_0.8fr_140px] lg:grid-cols-[70px_1.2fr_1.8fr_1fr_0.8fr_160px] px-4 md:px-5 lg:px-6 py-4 lg:py-[18px] bg-[#1A1A2E] gap-3 lg:gap-[15px] items-center shrink-0">
               <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-white/60"></div>
               <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-white/60">
@@ -373,11 +325,8 @@ export default function CoachList() {
                 Actions
               </div>
             </div>
-<<<<<<< HEAD
-=======
 
             {/* Table Body */}
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
             {renderContent()}
           </div>
         </div>
@@ -388,11 +337,8 @@ export default function CoachList() {
             onClick={(e) => e.target === e.currentTarget && setViewCoach(null)}
           >
             <div className="bg-white rounded-[24px] w-[700px] max-w-full max-h-[90vh] overflow-y-auto shadow-[0_30px_70px_rgba(0,0,0,0.3)] animate-slideUp">
-<<<<<<< HEAD
               
-=======
               {/* Modal Header */}
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
               <div className="bg-[#1A1A2E] p-[30px] rounded-t-[24px] flex items-center gap-5 relative">
                 {viewCoach.image ? (
                   <img
@@ -452,21 +398,12 @@ export default function CoachList() {
                     </div>
                   </div>
                   <div className="bg-[#FAF7F2] border-2 border-[#E8E0D0] rounded-xl p-4">
-<<<<<<< HEAD
                     <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#C9A84C] mb-1.5">🪪 NIC Number</div>
                     <div className="text-[16px] text-[#1A1A2E] font-medium">{viewCoach.nic || '—'}</div>
                   </div>
                   <div className="bg-[#FAF7F2] border-2 border-[#E8E0D0] rounded-xl p-4">
                     <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#C9A84C] mb-1.5">🏫 Employment</div>
                     <div className="text-[16px] text-[#1A1A2E] font-medium">{viewCoach.employment || '—'}</div>
-=======
-                    <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#C9A84C] mb-1.5">
-                      🏫 Employment
-                    </div>
-                    <div className="text-[16px] text-[#1A1A2E] font-medium">
-                      {viewCoach.employment || "—"}
-                    </div>
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
                   </div>
                   <div className="bg-[#FAF7F2] border-2 border-[#E8E0D0] rounded-xl p-4">
                     <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#C9A84C] mb-1.5">
@@ -495,17 +432,8 @@ export default function CoachList() {
                     </div>
                   </div>
                   <div className="bg-[#FAF7F2] border-2 border-[#E8E0D0] rounded-xl p-4">
-<<<<<<< HEAD
                     <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#C9A84C] mb-1.5">🔖 License Number</div>
                     <div className="text-[16px] text-[#1A1A2E] font-medium">{viewCoach.licenseNumber || '—'}</div>
-=======
-                    <div className="text-[12px] font-bold tracking-[1.5px] uppercase text-[#C9A84C] mb-1.5">
-                      🪪 License Number
-                    </div>
-                    <div className="text-[16px] text-[#1A1A2E] font-medium">
-                      {viewCoach.licenseNumber || "—"}
-                    </div>
->>>>>>> 3a57da8cf1d10a581cf61637efa49ebc2e54c31b
                   </div>
 
                   <div className="col-span-1 md:col-span-2 bg-[#FAF7F2] border-2 border-[#E8E0D0] rounded-xl p-4">
