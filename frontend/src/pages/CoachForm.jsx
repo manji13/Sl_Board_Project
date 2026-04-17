@@ -12,7 +12,7 @@ const qualificationOptions = [
   "Level 0", "Level 1", "Level 2", "Level 3", "No Qualifications"
 ];
 
-const districtOptions = ["Galle", "Matara", "Hambanthota", "Monaragala", "Rathnapura", "Badulla"];
+const districtOptions = ["Galle", "Matara", "hambantota", "Monaragala", "Ratnapura", "Badulla"];
 const zoneOptions = ["Galle Zone 1", "Galle Zone 2", "Galle Zone 3"];
 
 export default function CoachForm() {
