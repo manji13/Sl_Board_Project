@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import cricLogo from "../assets/CricLogo.jpeg"; // ✅ Imported the logo from assets
 
 export default function CoachList() {
   const [coaches, setCoaches] = useState([]);
@@ -238,9 +239,12 @@ export default function CoachList() {
         {/* Topbar */}
         <div className="bg-[#1A1A2E] px-6 lg:px-10 flex items-center justify-between h-[70px] border-b-[3px] border-[#C9A84C] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-[42px] h-[42px] bg-[#C9A84C] rounded-[10px] flex items-center justify-center text-[22px]">
-              🏏
-            </div>
+            {/* ✅ Replaced the emoji div with the actual Logo */}
+            <img 
+              src={cricLogo} 
+              alt="UPCA Logo" 
+              className="h-[46px] w-auto rounded-[8px] object-contain border-2 border-[#C9A84C]"
+            />
             <span className="font-serif-custom text-white text-[20px] tracking-[0.5px] font-semibold">
               Super Province Galle{" "}
               <span className="text-[#C9A84C] font-bold">

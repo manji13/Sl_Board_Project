@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import cricLogo from '../assets/CricLogo.jpeg'; // ✅ Imported the logo
 
 const designationOptions = [
   "Head coach - Senior", "Head Coach - Junior", "Senior Assistant coach",
@@ -195,7 +196,12 @@ export default function CoachForm() {
       >
         <div className="bg-[#1A1A2E] px-5 sm:px-10 flex items-center justify-between h-16 w-full border-b-[2px] border-[#C9A84C] sticky top-0 z-50">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#C9A84C] rounded-lg flex items-center justify-center text-[18px]">🏏</div>
+            {/* ✅ Replaced emoji div with the CricLogo image */}
+            <img 
+              src={cricLogo} 
+              alt="Logo" 
+              className="h-10 w-auto rounded-[6px] object-contain border-2 border-[#C9A84C]"
+            />
             <span className="font-serif-custom text-white text-[18px] tracking-[0.5px]">Southern Cricket <span className="text-[#C9A84C]">Authority</span></span>
           </div>
           <div className="flex items-center gap-2 text-[13px] text-white/50">
@@ -337,14 +343,21 @@ export default function CoachForm() {
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">District</label>
                     <select className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" name="district" value={formData.district} onChange={handleChange}>
                       <option value="">Select District</option>
-                      {districtOptions.map(d => <option key={d} value={d}>{d}</option>)}
+                      <option value="Galle">Galle</option>
+                      <option value="Matara">Matara</option>
+                      <option value="hambantota">hambantota</option>
+                      <option value="Monaragala">Monaragala</option>
+                      <option value="Ratnapura">Ratnapura</option>
+                      <option value="Badulla">Badulla</option>
                     </select>
                   </div>
                   <div className="flex flex-col gap-[7px]">
                     <label className="text-[12px] font-semibold tracking-[0.8px] uppercase text-[#4A5568] flex items-center gap-1">Zone</label>
                     <select className="px-3.5 py-[11px] border-[1.5px] border-[#E8E0D0] rounded-[10px] bg-[#FAF7F2] font-sans-custom text-[14px] text-[#1A1A2E] outline-none transition-all focus:border-[#C9A84C] focus:bg-white focus:ring-4 focus:ring-[#C9A84C]/10 w-full" name="zone" value={formData.zone} onChange={handleChange}>
                       <option value="">Select Zone</option>
-                      {zoneOptions.map(z => <option key={z} value={z}>{z}</option>)}
+                      <option value="Galle Zone 1">Galle Zone 1</option>
+                      <option value="Galle Zone 2">Galle Zone 2</option>
+                      <option value="Galle Zone 3">Galle Zone 3</option>
                     </select>
                   </div>
                 </div>
